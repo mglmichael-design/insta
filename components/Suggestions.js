@@ -42,7 +42,7 @@ function Suggestions() {
             <p className="pt-10 text-xs text-gray-400">
                 About • Help • Press • API • Jobs • Privacy • Terms • Locations	• Language
             </p>
-            <p className="pt-5 text-xs text-gray-400">@2022 INSTAGRAM FROM MIKE'S CLONE</p>
+            <p className="pt-5 text-xs text-gray-400">@2022 INSTAGRAM FROM MIKE CLONE</p>
         </div>
     );
 }
