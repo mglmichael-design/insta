@@ -11,16 +11,20 @@ export default NextAuth({
         GoogleProviders({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            authorization:{
+                params:{
+                    prompt: "consent",
+                    access_type:"offline",
+                    response_type:"code"
+                }
+            }
         }),
         // ...add more providers here
         
     ],
     
 
-    adapter: FirebaseAdapter({
-        db:db,
-        ...firestoreFunctions,
-    }),
+    
 
     session: {
         strategy: 'jwt',
@@ -41,6 +45,12 @@ export default NextAuth({
             return token
         },
         async session({ session, token, user }) {
+            session.user.username = session.user.name
+                .split(" ")
+                .join("")
+                .toLocaleLowerCase();
+            session.user.uid = token.sub;
+            
             // Send properties to the client, like an access_token from a provider.
             session.accessToken = token.accessToken
             return session

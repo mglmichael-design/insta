@@ -9,15 +9,25 @@ import {
     MenuIcon,
 } from "@heroicons/react/outline";
 import { HomeIcon } from "@heroicons/react/solid";
+import { useSession, signIn, signOut} from 'next-auth/react';
+import { useRouter } from 'next/router';
+import { useRecoilState} from 'recoil';
+import { modalState } from '../atoms/modalAtom.js';
 
 
 function Header() {
+    const {data: session} = useSession();
+    const [open, setOpen] = useRecoilState(modalState);
+    const router = useRouter();
+
     return (
         <div className="shadow-sm border-b bg-white sticky top-0 z-50">
             <div className="flex justify-around max-w-6xl mx-5 lg:mx-auto">
                 
                 {/* Left - Logo */}
-                <div className="relative hidden lg:inline-grid w-24 cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out">
+                <div
+                    onClick={()=>router.push('/')}
+                    className="relative hidden lg:inline-grid w-24 cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out">
                     <Image 
                         src="https://links.papareact.com/ocw"
                         layout="fill"
@@ -25,7 +35,9 @@ function Header() {
                         alt='big image'
                     />
                 </div>
-                <div className="relative lg:hidden flex-shrink-0 w-10 cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out">
+                <div
+                    onClick={()=>router.push('/')}
+                    className="relative lg:hidden flex-shrink-0 w-10 cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out">
                     <Image 
                         src="https://links.papareact.com/jjm"
                         layout="fill"
@@ -47,25 +59,36 @@ function Header() {
 
                 {/* Right - Menu buttons*/}
                 <div className="flex items-center justify-end space-x-4">
-                    <HomeIcon className="navBtn"/>
-                    <div className="relative navBtn">
+                    <HomeIcon onClick={()=>router.push('/')} className="navBtn"/>
+                    <MenuIcon 
+                        className="h-6 md:hidden cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out"/>
+                    {session ? (
+                        <>
+                        <div className="relative navBtn">
                         <PaperAirplaneIcon className="navBtn rotate-45"/>
                         <div className="absolute -top-2 -right-2 text-xs w-5 h-5 bg-red-500 rounded-full flex items-center justify-center animate-pulse text-white" >
                             3
                         </div>
                     </div>
                     
-                    <PlusCircleIcon className="navBtn"/>
+                    <PlusCircleIcon onClick={() => setOpen(true)} className="navBtn"/>
                     <UserGroupIcon className="navBtn"/>
                     <HeartIcon className="navBtn"/>
 
-                    <MenuIcon className="h-6 md:hidden cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out"/>
+                    
 
-                    <img 
-                        src="https://scontent-sea1-1.xx.fbcdn.net/v/t1.6435-9/121256714_1102627486867662_3053136786439458049_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=09cbfe&_nc_ohc=PgMxtBaD-ygAX8Ok8DD&_nc_ht=scontent-sea1-1.xx&oh=00_AT9gSK2RW_ToYyfzTv4IfT1Zeo1QAbBw3w9A3KQwYd2g8w&oe=62BBEC02" 
+                    <img
+                        onClick={signOut}
+                        src={session?.user?.image} 
                         alt="Profile Picture" 
-                        className="h-10 rounded-full cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out"
+                        className="h-10 w-10 rounded-full cursor-pointer hover:scale-125 transition-all  duration-150 ease-in-out"
                     />
+                    </>
+
+                    ):(
+                        <button onClick={signIn}>Sign In?</button>
+                    )}
+                    
                     
                     
                 </div>
