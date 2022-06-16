@@ -10,7 +10,7 @@ import {
 import { HeartIcon as HeartIconFilled } from "@heroicons/react/solid";
 import {useSession} from "next-auth/react"
 import {useState, useEffect} from 'react';
-import { addDoc, serverTimestamp, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { addDoc, serverTimestamp, collection, onSnapshot, query, orderBy, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import {db} from '../firebase';
 import Moment from 'react-moment';
 
@@ -18,7 +18,11 @@ function Post({id,username, userImg, img, caption}) {
     const {data: session} = useSession();
     const [comments, setComments] = useState([]);
     const [comment, setComment] = useState("");
+    const [likes, setLikes] = useState([]);
+    const [liked, setLiked] = useState(false);
 
+    // Commenting functionality
+    // use useEffect to access your db 
     useEffect(
         () => 
             onSnapshot(
@@ -28,9 +32,10 @@ function Post({id,username, userImg, img, caption}) {
                 ),
                 (snapshot ) => setComments(snapshot.docs)
             ),
-        [db]
+        [db, id]
     );
-
+    
+    // sending a comment to the db
     const sendComment = async (e) =>{
         e.preventDefault();
 
@@ -43,9 +48,43 @@ function Post({id,username, userImg, img, caption}) {
             userImage: session.user.image,
             timestamp: serverTimestamp(),
         })
-        
-
     }
+    // Likes Functionality
+    // same thing as comments
+    useEffect(
+        () =>
+            onSnapshot(
+                collection(db, 'posts', id, 'likes'),
+                    (snapshot) => 
+                        setLikes(snapshot.docs)
+            ),
+        [db, id]
+    );
+    // User can only like a post once
+    useEffect(
+        () =>
+            setLiked(
+                likes.findIndex(
+                    (like) => like.id === session?.user?.uid) !== -1
+            ),
+        [likes]
+    );
+
+    const likePost = async (e) =>{
+        e.preventDefault();
+
+        if(liked){
+            await deleteDoc(doc(db,'posts', id, 'likes', session.user.uid));
+        }else{
+            await setDoc(doc(db, 'posts', id, 'likes', session.user.uid), {
+            username: session.user.username,
+            });
+        }
+    };
+    console.log(liked);
+    
+
+
     return (
         <div className="bg-white my-7 border rounded-sm">
             {/*Header*/}
@@ -62,7 +101,16 @@ function Post({id,username, userImg, img, caption}) {
             {session ? 
             <div className=" flex justify-between px-4 pt-4">
                 <div className="flex space-x-4 ">
-                    <HeartIconFilled className="btn"/>
+                    {liked ? 
+                        (
+                            <HeartIconFilled onClick={likePost} className="btn text-red-500"/>
+                        ): (
+                            <HeartIcon onClick={likePost} className="btn"/>
+                        )
+                        
+                    }
+                    
+                    
                     <ChatIcon className="btn"/>
                     <PaperAirplaneIcon className="btn rotate-45"/>
                 </div>
@@ -75,8 +123,11 @@ function Post({id,username, userImg, img, caption}) {
 
             {/*caption*/}
             <div>
-                <p className="mx-3 mt-1">100 likes</p>
+                
                 <p className="p-5 truncate">
+                    {likes.length > 0 && (
+                        <p className="font-bold mb-1">{likes.length} likes </p>
+                    )}
                     <span className="font-bold mr-1">{username} </span>
                     {caption}
                 </p>
